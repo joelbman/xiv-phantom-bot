@@ -1,0 +1,22 @@
+{
+  "name": "ffxiv-geobot",
+  "version": "0.0.1",
+  "description": "FFXIV geolocation guessing bot with leaderboards",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "bot",
+    "ffxiv",
+    "geo",
+    "geolocation",
+    "geoguesser",
+    "geoguess"
+  ],
+  "author": "Joel Bergman",
+  "license": "GPL-3.0-or-later",
+  "dependencies": {
+    "discord.js": "^14.17.3"
+  }
+}
