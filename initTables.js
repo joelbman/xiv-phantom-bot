@@ -41,6 +41,7 @@ try {
     id INT AUTO_INCREMENT PRIMARY KEY,
     discord_id VARCHAR(25) UNIQUE NOT NULL,
     image_ids VARCHAR(255) NOT NULL,
+    difficulty TINYINT,
     expansion VARCHAR(15) NOT NULL,
     ends_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -51,6 +52,7 @@ try {
     `CREATE TABLE IF NOT EXISTS xivgeo_image (
     id INT AUTO_INCREMENT PRIMARY KEY,
     expansion VARCHAR(15) NOT NULL,
+    difficulty TINYINT,
     zone VARCHAR(55) NOT NULL,
     x VARCHAR(6) NOT NULL,
     y VARCHAR(6) NOT NULL,
