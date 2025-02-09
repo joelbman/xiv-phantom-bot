@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+    "allowJs": true,
+    "checkJs": false,
     "target": "ES2020",
     "module": "commonjs",
     "rootDir": "./src",
@@ -10,6 +12,7 @@
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "strictNullChecks": true,
-    "skipLibCheck": true
-  }
+    "skipLibCheck": true,
+  },
+  "exclude": ["*.mjs", "initTables.js", "deploycommands.js", "dist"]
 }

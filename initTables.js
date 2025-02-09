@@ -18,8 +18,8 @@ try {
     `CREATE TABLE IF NOT EXISTS xivgeo_user (
     id INT AUTO_INCREMENT PRIMARY KEY,
     discord_id VARCHAR(25) UNIQUE NOT NULL,
+    name VARCHAR(100) NOT NULL,
     points INT NOT NULL DEFAULT 0,
-    admin BOOLEAN NOT NULL DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   );`
   );
@@ -39,11 +39,11 @@ try {
   await db.execute(
     `CREATE TABLE IF NOT EXISTS xivgeo_quiz (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    discord_id VARCHAR(25) UNIQUE NOT NULL,
+    discord_id VARCHAR(25) NOT NULL,
     image_ids VARCHAR(255) NOT NULL,
     difficulty TINYINT,
-    expansion VARCHAR(15) NOT NULL,
-    ends_at TIMESTAMP,
+    expansion VARCHAR(15),
+    ends_at TIMESTAMP DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   );`
   );
@@ -56,7 +56,7 @@ try {
     zone VARCHAR(55) NOT NULL,
     x VARCHAR(6) NOT NULL,
     y VARCHAR(6) NOT NULL,
-    last_used TIMESTAMP,
+    last_used TIMESTAMP DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   );`
   );
