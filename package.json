@@ -1,7 +1,7 @@
 {
-  "name": "ffxiv-geobot",
+  "name": "ffxiv-phantom-bot",
   "version": "0.0.1",
-  "description": "FFXIV geolocation guessing bot with leaderboards",
+  "description": "Bot for Phantom hunter Discord",
   "main": "index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",

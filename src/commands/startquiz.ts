@@ -8,7 +8,7 @@ import {
   TextChannel,
 } from 'discord.js';
 import db from '../db';
-import { IImage } from '../types';
+import { IImage, IQuiz } from '../types';
 
 export const data = new SlashCommandBuilder()
   .setName('startquiz')
@@ -27,29 +27,32 @@ export const data = new SlashCommandBuilder()
       )
   )
   .addIntegerOption((option) =>
-    option
-      .setName('difficulty')
-      .setDescription('Difficulty 1-5')
-      .setMinValue(1)
-      .setMaxValue(5)
+    option.setName('difficulty').setDescription('Difficulty 1-5').setMinValue(1).setMaxValue(5)
   )
   .addStringOption((option) =>
-    option
-      .setName('imageids')
-      .setDescription('Comma separated list of image IDs e.g. 4,5,12,13,15')
+    option.setName('imageids').setDescription('Type a comma separated list of image IDs e.g. 4,5,12,13,15')
   );
 
 export async function execute(interaction: ChatInputCommandInteraction) {
-  if (
-    !(interaction.member?.permissions as PermissionsBitField).has([
-      PermissionsBitField.Flags.KickMembers,
-    ])
-  ) {
-    await interaction.reply({
+  if (!(interaction.member?.permissions as PermissionsBitField).has([PermissionsBitField.Flags.KickMembers])) {
+    return await interaction.reply({
       content: 'Permission denied',
       flags: MessageFlags.Ephemeral,
     });
-    return;
+  }
+
+  const now = new Date(Date.now());
+  const date = now.toISOString().slice(0, 19).replace('T', ' ');
+
+  const [runningQuizes] = await db.execute<IQuiz[]>('SELECT * FROM xivgeo_quiz WHERE ends_at > ? AND running = 1', [
+    date,
+  ]);
+
+  if (runningQuizes && runningQuizes.length > 0) {
+    return await interaction.reply({
+      content: 'There is already a running quiz',
+      flags: MessageFlags.Ephemeral,
+    });
   }
 
   const opts = interaction.options;
@@ -69,6 +72,13 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
     const [images] = await db.execute<IImage[]>(stmt);
 
+    if (images.length < 5) {
+      return interaction.reply({
+        content: 'There are less than 5 unused images so a new quiz cannot be created.',
+        flags: MessageFlags.Ephemeral,
+      });
+    }
+
     const shuffled = images
       .map((value) => ({ value, sort: Math.random() }))
       .sort((a, b) => a.sort - b.sort)
@@ -80,11 +90,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   } else {
     imageIds = opts.getString('imageids') || '';
 
-    const [images] = await db.execute<IImage[]>(
-      'SELECT * FROM xivgeo_image WHERE id IN (' + imageIds + ')'
-    );
-    console.log(imageIds);
-    console.log(images);
+    const [images] = await db.execute<IImage[]>('SELECT * FROM xivgeo_image WHERE id IN (' + imageIds + ')');
 
     imgList = images;
   }
@@ -92,28 +98,37 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   try {
     const oneWeek = new Date(Date.now() + 6.048e8);
     const endsAt = oneWeek.toISOString().slice(0, 19).replace('T', ' ');
+
+    const channel = interaction.channel as TextChannel;
+
+    const embeds = [
+      new EmbedBuilder()
+        .setColor(0x0099ff)
+        .setTitle('XIV Geoguesser')
+        .setDescription("A new quiz has started!\nThis week's quiz is ")
+        .setFooter({ text: 'Quiz ends at ' + endsAt }),
+      imgList.map((img, i) =>
+        new EmbedBuilder()
+          .setColor(0x0099ff)
+          .setTitle('#' + (i + 1))
+          .setImage(img.path)
+      ),
+    ].flat();
+
+    const msg = await channel.send({ embeds: embeds });
+
     const [insert] = await db.execute(
-      'INSERT INTO xivgeo_quiz (expansion, difficulty, image_ids, ends_at, discord_id) VALUES (?, ?, ?, ?, ?)',
+      'INSERT INTO xivgeo_quiz (expansion, difficulty, image_ids, ends_at, discord_id, message_id, channel_id, running) VALUES (?, ?, ?, ?, ?, ?, ?, 1)',
       [
         opts.getString('expansion') ?? null,
         opts.getInteger('difficulty') ?? null,
         imageIds,
         endsAt,
         interaction.member?.user.id ?? null,
+        msg.id,
+        interaction.channel?.id ?? null,
       ]
     );
-
-    const channel = interaction.channel as TextChannel;
-
-    const embeds = imgList.map((img, i) =>
-      new EmbedBuilder()
-        .setColor(0x0099ff)
-        .setTitle('#' + (i + 1))
-        .setImage(img.path)
-        .setFooter({ text: 'Quiz ends at ' + endsAt })
-    );
-
-    await channel.send({ embeds: embeds });
 
     return interaction.reply({
       content: 'Quiz started! Quiz ID: ' + (insert as any).insertId,

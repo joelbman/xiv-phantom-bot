@@ -13,6 +13,8 @@ export interface IQuiz extends RowDataPacket {
   id: number;
   ends_at: string;
   image_ids: string;
+  message_id: string;
+  channel_id: string;
 }
 
 export interface IUser extends RowDataPacket {

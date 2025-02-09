@@ -40,9 +40,11 @@ try {
     `CREATE TABLE IF NOT EXISTS xivgeo_quiz (
     id INT AUTO_INCREMENT PRIMARY KEY,
     discord_id VARCHAR(25) NOT NULL,
+    message_id VARCHAR(55) NOT NULL,
     image_ids VARCHAR(255) NOT NULL,
     difficulty TINYINT,
     expansion VARCHAR(15),
+    running BOOLEAN DEFAULT FALSE,
     ends_at TIMESTAMP DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   ) CHARSET=utf8mb4_unicode_ci;`
