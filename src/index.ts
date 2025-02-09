@@ -17,13 +17,22 @@ client.on('guildCreate', async (guild) => {
 });
 
 client.on('interactionCreate', async (interaction) => {
-  if (!interaction.isCommand()) {
-    console.log('not a command');
+  if (interaction.isCommand()) {
+    const { commandName } = interaction;
+    if (commands[commandName as keyof typeof commands]) {
+      commands[commandName as keyof typeof commands].execute(interaction as any);
+    }
     return;
-  }
-  const { commandName } = interaction;
-  if (commands[commandName as keyof typeof commands]) {
-    commands[commandName as keyof typeof commands].execute(interaction as any);
+  } else if (interaction.isAutocomplete()) {
+    if (interaction.commandName !== 'guess' && interaction.commandName !== 'addimage') {
+      return;
+    }
+
+    try {
+      await commands.guess.autocomplete(interaction);
+    } catch (error) {
+      console.error(error);
+    }
   }
 });
 

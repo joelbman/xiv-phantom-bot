@@ -1,33 +1,25 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
+  AutocompleteInteraction,
   CommandInteraction,
   MessageFlags,
   PermissionsBitField,
   SlashCommandBuilder,
 } from 'discord.js';
 import db from '../db';
+import { zones } from '../util/zones';
 
 export const data = new SlashCommandBuilder()
   .setName('addimage')
   .setDescription('Adds a new image to the quiz pool')
-  .addAttachmentOption((option) =>
-    option.setName('image').setDescription('Image').setRequired(true)
-  )
+  .addAttachmentOption((option) => option.setName('image').setDescription('Image').setRequired(true))
   .addStringOption((option) =>
-    option.setName('zone').setDescription('Zone name').setRequired(true)
+    option.setName('zone').setDescription('Zone name').setRequired(true).setAutocomplete(true)
   )
-  .addNumberOption((option) =>
-    option.setName('x').setDescription('X').setRequired(true)
-  )
-  .addNumberOption((option) =>
-    option.setName('y').setDescription('Y').setRequired(true)
-  )
+  .addNumberOption((option) => option.setName('x').setDescription('X').setRequired(true))
+  .addNumberOption((option) => option.setName('y').setDescription('Y').setRequired(true))
   .addIntegerOption((option) =>
-    option
-      .setName('difficulty')
-      .setDescription('Difficulty 1-5')
-      .setMaxValue(5)
-      .setMinValue(1)
+    option.setName('difficulty').setDescription('Difficulty 1-5').setMaxValue(5).setMinValue(1)
   )
   .addStringOption((option) =>
     option
@@ -44,11 +36,7 @@ export const data = new SlashCommandBuilder()
   );
 
 export async function execute(interaction: CommandInteraction) {
-  if (
-    !(interaction.member?.permissions as PermissionsBitField).has([
-      PermissionsBitField.Flags.KickMembers,
-    ])
-  ) {
+  if (!(interaction.member?.permissions as PermissionsBitField).has([PermissionsBitField.Flags.KickMembers])) {
     await interaction.reply({
       content: 'Permission denied',
       flags: MessageFlags.Ephemeral,
@@ -82,4 +70,11 @@ export async function execute(interaction: CommandInteraction) {
       flags: MessageFlags.Ephemeral,
     });
   }
+}
+
+export async function autocomplete(interaction: AutocompleteInteraction) {
+  const focusedValue = interaction.options.getFocused();
+  const filtered = zones.filter((choice) => choice.toLocaleLowerCase().includes(focusedValue.toLocaleLowerCase()));
+  const options = filtered.length > 25 ? filtered.slice(0, 25) : filtered;
+  await interaction.respond(options.map((choice) => ({ name: choice, value: choice })));
 }

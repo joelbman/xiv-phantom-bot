@@ -1,6 +1,7 @@
-import { ChatInputCommandInteraction, MessageFlags, SlashCommandBuilder } from 'discord.js';
+import { AutocompleteInteraction, ChatInputCommandInteraction, MessageFlags, SlashCommandBuilder } from 'discord.js';
 import db from '../db';
 import { IGuess, IImage, IQuiz, IUser } from '../types';
+import { zones } from '../util/zones';
 
 export const data = new SlashCommandBuilder()
   .setName('guess')
@@ -9,7 +10,7 @@ export const data = new SlashCommandBuilder()
     option.setName('number').setDescription('Image number 1-5').setMinValue(1).setMaxValue(5).setRequired(true)
   )
   .addStringOption((option) =>
-    option.setName('zone').setDescription('Exact zone name as written in game').setRequired(true)
+    option.setName('zone').setDescription('Exact zone name as written in game').setRequired(true).setAutocomplete(true)
   )
   .addNumberOption((option) => option.setName('x').setDescription('X coordinate e.g. 23.2').setRequired(true))
   .addNumberOption((option) => option.setName('y').setDescription('Y coordinate e.g. 13.7').setRequired(true));
@@ -143,4 +144,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       flags: MessageFlags.Ephemeral,
     });
   }
+}
+
+export async function autocomplete(interaction: AutocompleteInteraction) {
+  const focusedValue = interaction.options.getFocused();
+  const filtered = zones.filter((choice) => choice.toLocaleLowerCase().includes(focusedValue.toLocaleLowerCase()));
+  const options = filtered.length > 25 ? filtered.slice(0, 25) : filtered;
+  await interaction.respond(options.map((choice) => ({ name: choice, value: choice })));
 }
