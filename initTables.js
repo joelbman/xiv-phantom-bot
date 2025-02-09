@@ -21,7 +21,7 @@ try {
     name VARCHAR(100) NOT NULL,
     points INT NOT NULL DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  );`
+  ) CHARSET=utf8mb4_unicode_ci;`
   );
 
   await db.execute(
@@ -33,7 +33,7 @@ try {
     x VARCHAR(6) NOT NULL,
     y VARCHAR(6) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  );`
+  ) CHARSET=utf8mb4_unicode_ci;`
   );
 
   await db.execute(
@@ -45,7 +45,7 @@ try {
     expansion VARCHAR(15),
     ends_at TIMESTAMP DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  );`
+  ) CHARSET=utf8mb4_unicode_ci;`
   );
 
   await db.execute(
@@ -58,7 +58,7 @@ try {
     y VARCHAR(6) NOT NULL,
     last_used TIMESTAMP DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  );`
+  ) CHARSET=utf8mb4_unicode_ci;`
   );
 
   console.log('tables created');

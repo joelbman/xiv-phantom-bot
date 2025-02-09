@@ -8,16 +8,7 @@ import {
   TextChannel,
 } from 'discord.js';
 import db from '../db';
-import { RowDataPacket } from 'mysql2';
-
-interface IImage extends RowDataPacket {
-  id: number;
-  expansion?: string;
-  difficulty?: number;
-  zone: string;
-  x: number;
-  y: number;
-}
+import { IImage } from '../types';
 
 export const data = new SlashCommandBuilder()
   .setName('startquiz')

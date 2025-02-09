@@ -6,6 +6,7 @@ const db = mysql.createPool({
   password: config.DB_PASS,
   database: config.DB_DATABASE,
   host: config.DB_HOSTNAME,
+  timezone: 'Z',
 });
 
 export default db;
