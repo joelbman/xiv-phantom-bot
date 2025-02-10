@@ -24,7 +24,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
     if (!rows || rows.length < 1) {
       return interaction.reply({
-        content: 'There is no active geo quiz currently.',
+        content: 'There is no active quiz currently.',
         flags: MessageFlags.Ephemeral,
       });
     }
@@ -73,6 +73,13 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     if (!img) {
       return interaction.reply({
         content: 'Error, specified image was not found',
+        flags: MessageFlags.Ephemeral,
+      });
+    }
+
+    if (img.discord_id === interaction.user.id) {
+      return interaction.reply({
+        content: 'You cannot guess on entries that you have uploaded',
         flags: MessageFlags.Ephemeral,
       });
     }

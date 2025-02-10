@@ -32,6 +32,7 @@ try {
     zone VARCHAR(55) NOT NULL,
     x VARCHAR(6) NOT NULL,
     y VARCHAR(6) NOT NULL,
+    image_number INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   ) CHARSET=utf8mb4_unicode_ci;`
   );
@@ -41,10 +42,11 @@ try {
     id INT AUTO_INCREMENT PRIMARY KEY,
     discord_id VARCHAR(25) NOT NULL,
     message_id VARCHAR(55) NOT NULL,
+    channel_id VARCHAR(55) NOT NULL,
     image_ids VARCHAR(255) NOT NULL,
     difficulty TINYINT,
     expansion VARCHAR(15),
-    running BOOLEAN DEFAULT FALSE,
+    running TINYINT(1) DEFAULT 0,
     ends_at TIMESTAMP DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   ) CHARSET=utf8mb4_unicode_ci;`
@@ -58,6 +60,7 @@ try {
     zone VARCHAR(55) NOT NULL,
     x VARCHAR(6) NOT NULL,
     y VARCHAR(6) NOT NULL,
+    discord_id VARCHAR(25) NOT NULL,
     last_used TIMESTAMP DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   ) CHARSET=utf8mb4_unicode_ci;`

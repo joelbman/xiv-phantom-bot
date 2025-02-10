@@ -101,11 +101,13 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
     const channel = interaction.channel as TextChannel;
 
+    const role = interaction.guild?.roles.cache.find((r) => r.name === 'GeoGuess');
+
     const embeds = [
       new EmbedBuilder()
         .setColor(0x0099ff)
         .setTitle('XIV Geoguesser')
-        .setDescription("A new quiz has started!\nThis week's quiz is ")
+        .setDescription(`A new quiz has started!\n ${role?.id && `<@${role.id}&>`}`)
         .setFooter({ text: 'Quiz ends at ' + endsAt }),
       imgList.map((img, i) =>
         new EmbedBuilder()

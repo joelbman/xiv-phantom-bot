@@ -7,6 +7,7 @@ export interface IImage extends RowDataPacket {
   zone: string;
   x: string;
   y: string;
+  discord_id: string;
 }
 
 export interface IQuiz extends RowDataPacket {
