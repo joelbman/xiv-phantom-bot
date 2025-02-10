@@ -1,6 +1,6 @@
 import { REST, Routes } from 'discord.js';
-import { config } from './config';
-import { commands } from './commands';
+import { config } from '../config';
+import { commands } from '../commands';
 
 const commandsData = Object.values(commands).map((command) => command.data);
 
@@ -14,12 +14,9 @@ export async function deployCommands({ guildId }: DeployCommandsProps) {
   try {
     console.log('Started refreshing application (/) commands.');
 
-    await rest.put(
-      Routes.applicationGuildCommands(config.BOT_CLIENT_ID || '', guildId),
-      {
-        body: commandsData,
-      }
-    );
+    await rest.put(Routes.applicationGuildCommands(config.BOT_CLIENT_ID || '', guildId), {
+      body: commandsData,
+    });
 
     console.log('Successfully reloaded application (/) commands.');
   } catch (error) {

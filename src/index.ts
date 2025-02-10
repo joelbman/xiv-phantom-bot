@@ -2,9 +2,8 @@
 import { Client, TextChannel } from 'discord.js';
 import { config } from './config';
 import { commands } from './commands';
-import { deployCommands } from './deploy-commands';
-import { IQuiz } from './types';
-import db from './db';
+import { deployCommands } from './util/deploy-commands';
+import quizService from './services/quizService';
 
 const client = new Client({
   intents: ['Guilds', 'GuildMessages'],
@@ -14,27 +13,24 @@ client.once('ready', async () => {
   console.log('Bot running');
 
   setInterval(async () => {
-    const now = new Date(Date.now());
-    const date = now.toISOString().slice(0, 19).replace('T', ' ');
+    const [expiredQuizes] = await quizService.getExpired();
 
-    const [runningQuizes] = await db.execute<IQuiz[]>('SELECT * FROM xivgeo_quiz WHERE ends_at < ? AND running = 1', [
-      date,
-    ]);
+    if (expiredQuizes && expiredQuizes[0]) {
+      const [update] = await quizService.stopQuiz(expiredQuizes[0].id);
 
-    if (runningQuizes && runningQuizes[0]) {
-      const [update] = await db.execute<any>('UPDATE xivgeo_quiz SET running = 0 WHERE id = ?', [runningQuizes[0].id]);
-
-      if (update.affectedRows && runningQuizes[0].message_id) {
-        const channel = (await client.channels.fetch(runningQuizes[0].channel_id)) as TextChannel;
-        const msg = await channel?.messages.fetch(runningQuizes[0].message_id);
+      if (update.affectedRows && expiredQuizes[0].message_id) {
+        const channel = (await client.channels.fetch(expiredQuizes[0].channel_id)) as TextChannel;
+        const msg = await channel?.messages.fetch(expiredQuizes[0].message_id);
         if (msg) {
           await msg.delete();
         }
-        return await channel.send('The running quiz has ended. Thanks for participating! :ok_hand:');
+        if (channel) {
+          return await channel.send('The running quiz has ended. Thanks for participating! :ok_hand:');
+        }
       }
     }
 
-    console.log('Checked running polls - ' + runningQuizes.length + ' matches');
+    console.log('Checked running polls - ' + expiredQuizes.length + ' matches');
   }, 24000);
   //3600000
 });
@@ -56,7 +52,7 @@ client.on('interactionCreate', async (interaction) => {
     }
 
     try {
-      await commands.guess.autocomplete(interaction);
+      await commands.geoguess.autocomplete(interaction);
     } catch (error) {
       console.error(error);
     }

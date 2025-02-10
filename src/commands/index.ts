@@ -1,15 +1,15 @@
-import * as addimage from './addImage';
-import * as startquiz from './startquiz';
-import * as stopquiz from './stopquiz';
-import * as guess from './guess';
-import * as leaderboard from './leaderboard';
+import * as geoimage from './geoimage';
+import * as geostart from './geostart';
+import * as geostop from './geostop';
+import * as geoguess from './geoguess';
+import * as geoleaderboard from './geoleaderboard';
 import * as sendmsg from './sendMsg';
 
 export const commands = {
-  addimage,
-  startquiz,
-  stopquiz,
-  guess,
-  leaderboard,
+  geoimage,
+  geostart,
+  geostop,
+  geoguess,
+  geoleaderboard,
   sendmsg,
 };

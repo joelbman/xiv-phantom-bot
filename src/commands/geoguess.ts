@@ -1,10 +1,12 @@
 import { AutocompleteInteraction, ChatInputCommandInteraction, MessageFlags, SlashCommandBuilder } from 'discord.js';
-import db from '../db';
-import { IGuess, IImage, IQuiz, IUser } from '../types';
 import { zones } from '../util/zones';
+import userService from '../services/userService';
+import imageService from '../services/imageService';
+import quizService from '../services/quizService';
+import guessService from '../services/guessService';
 
 export const data = new SlashCommandBuilder()
-  .setName('guess')
+  .setName('geoguess')
   .setDescription('Guess a location on the current running quiz')
   .addIntegerOption((option) =>
     option.setName('number').setDescription('Image number 1-5').setMinValue(1).setMaxValue(5).setRequired(true)
@@ -16,48 +18,48 @@ export const data = new SlashCommandBuilder()
   .addNumberOption((option) => option.setName('y').setDescription('Y coordinate e.g. 13.7').setRequired(true));
 
 export async function execute(interaction: ChatInputCommandInteraction) {
-  const now = new Date(Date.now());
-  const date = now.toISOString().slice(0, 19).replace('T', ' ');
-
   try {
-    const [rows] = await db.execute<IQuiz[]>('SELECT * FROM xivgeo_quiz WHERE ends_at > ?', [date]);
+    const [quizes] = await quizService.getRunning();
 
-    if (!rows || rows.length < 1) {
+    if (!quizes || quizes.length < 1) {
       return interaction.reply({
         content: 'There is no active quiz currently.',
         flags: MessageFlags.Ephemeral,
       });
     }
 
-    const quiz = rows[0];
+    const quiz = quizes[0];
     const opts = interaction.options;
     const imgNumber = opts.getInteger('number');
     const x = opts.getNumber('x');
     const y = opts.getNumber('y');
+    const zone = opts.getString('zone');
 
-    if (!x || !y || !imgNumber) {
+    if (!x || !y || !imgNumber || !zone) {
       return interaction.reply({
         content: 'Error!',
         flags: MessageFlags.Ephemeral,
       });
     }
 
-    // Check if user has already guessed for this specific quiz & image
-    const [guess] = await db.execute<IGuess[]>('SELECT * FROM xivgeo_guess WHERE image_number = ? AND quiz_id = ?', [
-      imgNumber,
-      quiz.id,
-    ]);
+    if (x.toString().length > 5 || y.toString.length > 5 || x.toString().length < 3 || y.toString().length < 3) {
+      return interaction.reply({
+        content: 'Invalid coordinate value',
+        flags: MessageFlags.Ephemeral,
+      });
+    }
 
-    if (guess && guess.length > 0) {
+    // Check if user has already guessed for this specific quiz & image
+    const hasGuessed = await guessService.hasGuessed(imgNumber, quiz.id, interaction.user.id);
+
+    if (hasGuessed) {
       return interaction.reply({
         content: 'You have already guessed for that specific entry!',
         flags: MessageFlags.Ephemeral,
       });
     }
 
-    const [images] = await db.execute<IImage[]>('SELECT * FROM xivgeo_image WHERE id IN (' + quiz.image_ids + ')', [
-      date,
-    ]);
+    const [images] = await imageService.getByIds(quiz.image_ids);
 
     if (!images) {
       return interaction.reply({
@@ -84,25 +86,21 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       });
     }
 
-    await db.execute<IGuess[]>(
-      'INSERT INTO xivgeo_guess (discord_id, quiz_id, image_number, zone, x, y) VALUES (?, ?, ?, ?, ?, ?)',
-      [
-        interaction.member?.user.id,
-        quiz.id,
-        imgNumber,
-        opts.getString('zone'),
-        opts.getNumber('x'),
-        opts.getNumber('y'),
-      ]
-    );
+    await guessService.addGuess({
+      discordId: interaction.user.id,
+      quizId: quiz.id,
+      imgNumber,
+      image_id: img.id,
+      zone,
+      x,
+      y,
+    });
 
     // Correct answer
     if (
-      parseFloat(img.x) <= x + 2 &&
-      parseFloat(img.x) >= x - 2 &&
-      parseFloat(img.y) >= y + 2 &&
-      parseFloat(img.y) >= y - 2 &&
-      img.zone === opts.getString('zone')
+      (img.x <= x + 2 || img.x >= x - 2) &&
+      (img.y >= y + 2 || img.y >= y - 2) &&
+      img.zone.toLocaleLowerCase() === zone.toLocaleLowerCase()
     ) {
       const userId = interaction.member?.user.id;
 
@@ -113,25 +111,15 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         });
       }
 
-      const [users] = await db.execute<IUser[]>('SELECT * FROM xivgeo_user WHERE discord_id = ?', [
-        interaction.member?.user.id,
-      ]);
+      const [users] = await userService.getUser(interaction.member?.user.id);
 
       // New user
       if (!users[0]) {
-        await db.execute<IUser[]>('INSERT INTO xivgeo_user (discord_id, name, points) VALUES (?, ?, ?)', [
-          interaction.member?.user.id,
-          interaction.member?.user.username,
-          1,
-        ]);
+        await userService.addUser(interaction.member?.user.id, interaction.member?.user.username);
       }
       // Update points on existing user
       else {
-        await db.execute<IUser[]>('UPDATE xivgeo_user SET points = points + 1 WHERE discord_id = ?', [
-          interaction.member?.user.id,
-          interaction.member?.user.username,
-          1,
-        ]);
+        await userService.updateUser(interaction.member?.user.id, interaction.member?.user.username);
       }
 
       return interaction.reply({

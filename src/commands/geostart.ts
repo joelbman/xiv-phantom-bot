@@ -7,11 +7,19 @@ import {
   SlashCommandBuilder,
   TextChannel,
 } from 'discord.js';
-import db from '../db';
-import { IImage, IQuiz } from '../types';
+import imageService from '../services/imageService';
+import quizService from '../services/quizService';
+
+const difficultyMapping: { [key: number]: string } = {
+  1: 'Very easy',
+  2: 'Easy',
+  3: 'Medium',
+  4: 'Hard',
+  5: 'Extreme',
+};
 
 export const data = new SlashCommandBuilder()
-  .setName('startquiz')
+  .setName('geostart')
   .setDescription('Starts a new quiz')
   .addStringOption((option) =>
     option
@@ -29,6 +37,9 @@ export const data = new SlashCommandBuilder()
   .addIntegerOption((option) =>
     option.setName('difficulty').setDescription('Difficulty 1-5').setMinValue(1).setMaxValue(5)
   )
+  .addIntegerOption((option) =>
+    option.setName('maxdifficulty').setDescription('Max difficulty 2-4').setMinValue(2).setMaxValue(4)
+  )
   .addStringOption((option) =>
     option.setName('imageids').setDescription('Type a comma separated list of image IDs e.g. 4,5,12,13,15')
   );
@@ -41,12 +52,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     });
   }
 
-  const now = new Date(Date.now());
-  const date = now.toISOString().slice(0, 19).replace('T', ' ');
-
-  const [runningQuizes] = await db.execute<IQuiz[]>('SELECT * FROM xivgeo_quiz WHERE ends_at > ? AND running = 1', [
-    date,
-  ]);
+  const [runningQuizes] = await quizService.getRunning();
 
   if (runningQuizes && runningQuizes.length > 0) {
     return await interaction.reply({
@@ -60,17 +66,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   let imgList;
 
   if (!opts.getString('imageids')) {
-    let stmt = 'SELECT * FROM xivgeo_image WHERE last_used IS NULL';
-
-    if (opts.getString('expansion')) {
-      stmt += ' AND expansion = ' + opts.getString('expansion');
-    }
-
-    if (opts.getString('expansion')) {
-      stmt += ' AND difficulty = ' + opts.getInteger('difficulty');
-    }
-
-    const [images] = await db.execute<IImage[]>(stmt);
+    const [images] = await imageService.getUnused({
+      expansion: opts.getString('expansion'),
+      difficulty: opts.getInteger('difficulty'),
+      maxDifficulty: opts.getInteger('maxdifficulty'),
+    });
 
     if (images.length < 5) {
       return interaction.reply({
@@ -90,7 +90,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   } else {
     imageIds = opts.getString('imageids') || '';
 
-    const [images] = await db.execute<IImage[]>('SELECT * FROM xivgeo_image WHERE id IN (' + imageIds + ')');
+    const [images] = await imageService.getByIds(imageIds);
 
     imgList = images;
   }
@@ -103,11 +103,25 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
     const role = interaction.guild?.roles.cache.find((r) => r.name === 'GeoGuess');
 
+    let difficultyText = '';
+
+    if (opts.getInteger('maxdifficulty')) {
+      difficultyText = 'Very easy - ' + difficultyMapping[opts.getInteger('maxdifficulty') as number];
+    } else if (opts.getInteger('difficulty')) {
+      difficultyText = difficultyMapping[opts.getInteger('difficulty') as number];
+    } else {
+      difficultyText = 'Any';
+    }
+
     const embeds = [
       new EmbedBuilder()
         .setColor(0x0099ff)
         .setTitle('XIV Geoguesser')
-        .setDescription(`A new quiz has started!\n ${role?.id && `<@${role.id}&>`}`)
+        .setDescription(`A new quiz has started! ${role?.id && `<@${role.id}&>`}`)
+        .addFields(
+          { name: 'Difficulty', value: difficultyText, inline: true },
+          { name: 'Expansion', value: opts.getString('expansion')?.toLocaleUpperCase() || 'Any', inline: true }
+        )
         .setFooter({ text: 'Quiz ends at ' + endsAt }),
       imgList.map((img, i) =>
         new EmbedBuilder()
@@ -119,18 +133,16 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
     const msg = await channel.send({ embeds: embeds });
 
-    const [insert] = await db.execute(
-      'INSERT INTO xivgeo_quiz (expansion, difficulty, image_ids, ends_at, discord_id, message_id, channel_id, running) VALUES (?, ?, ?, ?, ?, ?, ?, 1)',
-      [
-        opts.getString('expansion') ?? null,
-        opts.getInteger('difficulty') ?? null,
-        imageIds,
-        endsAt,
-        interaction.member?.user.id ?? null,
-        msg.id,
-        interaction.channel?.id ?? null,
-      ]
-    );
+    const [insert] = await quizService.addQuiz({
+      image_ids: imageIds,
+      ends_at: endsAt,
+      message_id: msg.id,
+      channel_id: interaction.channel?.id || '',
+      discord_id: interaction.user.id,
+      expansion: opts.getString('expansion') ?? null,
+      difficulty: opts.getInteger('difficulty') ?? null,
+      maxdifficulty: opts.getInteger('maxdifficulty') ?? null,
+    });
 
     return interaction.reply({
       content: 'Quiz started! Quiz ID: ' + (insert as any).insertId,

@@ -6,11 +6,11 @@ import {
   PermissionsBitField,
   SlashCommandBuilder,
 } from 'discord.js';
-import db from '../db';
 import { zones } from '../util/zones';
+import imageService from '../services/imageService';
 
 export const data = new SlashCommandBuilder()
-  .setName('addimage')
+  .setName('geoimage')
   .setDescription('Adds a new image to the quiz pool')
   .addAttachmentOption((option) => option.setName('image').setDescription('Image').setRequired(true))
   .addStringOption((option) =>
@@ -47,20 +47,17 @@ export async function execute(interaction: CommandInteraction) {
   const opts = interaction.options as any;
 
   try {
-    const [rows] = await db.execute(
-      'INSERT INTO xivgeo_image (path, expansion, difficulty, zone, x, y) VALUES (?, ?, ?, ?, ?, ?)',
-      [
-        opts.getAttachment('image').url,
-        opts.getString('expansion') ?? null,
-        opts.getInteger('difficulty') ?? null,
-        opts.getString('zone'),
-        opts.getNumber('x'),
-        opts.getNumber('y'),
-      ]
-    );
-    console.log(rows);
+    const [insert] = await imageService.addImage({
+      url: opts.getAttachment('image').url,
+      expansion: opts.getString('expansion') ?? null,
+      difficulty: opts.getInteger('difficulty') ?? null,
+      zone: opts.getString('zone'),
+      x: opts.getNumber('x'),
+      y: opts.getNumber('y'),
+      discord_id: interaction.user.id,
+    });
     await interaction.reply({
-      content: 'Donezo :ok_hand: - Image ID: ' + (rows as any).insertId,
+      content: 'Donezo :ok_hand: - Image ID: ' + (insert as any).insertId,
       flags: MessageFlags.Ephemeral,
     });
   } catch (e) {

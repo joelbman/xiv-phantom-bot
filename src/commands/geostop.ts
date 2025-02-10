@@ -1,9 +1,8 @@
 import { ChatInputCommandInteraction, MessageFlags, PermissionsBitField, SlashCommandBuilder } from 'discord.js';
-import { IQuiz } from '../types';
-import db from '../db';
+import quizService from '../services/quizService';
 
 export const data = new SlashCommandBuilder()
-  .setName('stopquiz')
+  .setName('geostop')
   .setDescription('Stops the current quiz (if there is one)');
 
 export async function execute(interaction: ChatInputCommandInteraction) {
@@ -14,23 +13,13 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     });
   }
 
-  const now = new Date(Date.now());
-  const date = now.toISOString().slice(0, 19).replace('T', ' ');
-
   try {
-    const [runningQuizes] = await db.execute<IQuiz[]>('SELECT * FROM xivgeo_quiz WHERE ends_at > ? AND running = 1', [
-      date,
-    ]);
+    const [runningQuizes] = await quizService.getRunning();
 
     if (runningQuizes && runningQuizes.length > 0) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const [update] = await db.execute<any>('UPDATE xivgeo_quiz SET running = ? WHERE ends_at > ? AND running = 1', [
-        0,
-        date,
-      ]);
+      const [update] = await quizService.stopQuiz(runningQuizes[0].id);
 
       if (update.affectedRows && runningQuizes[0].message_id) {
-        console.log(runningQuizes[0].message_id);
         const msg = await interaction.channel?.messages.fetch(runningQuizes[0].message_id);
         if (msg) {
           await msg.delete();

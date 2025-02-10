@@ -1,12 +1,13 @@
 import { CommandInteraction, MessageFlags, SlashCommandBuilder } from 'discord.js';
-import db from '../db';
-import { IUser } from '../types';
+import userService from '../services/userService';
 
-export const data = new SlashCommandBuilder().setName('leaderboard').setDescription('Shows the leaderboard');
+export const data = new SlashCommandBuilder()
+  .setName('geoleaderboard')
+  .setDescription('Shows the geoguessing leaderboard');
 
 export async function execute(interaction: CommandInteraction) {
   try {
-    const [rows] = await db.execute<IUser[]>('SELECT * FROM xivgeo_user ORDER BY points DESC LIMIT 10');
+    const [rows] = await userService.getLeaderboard();
 
     let str = '';
     rows.forEach((user, i) => {

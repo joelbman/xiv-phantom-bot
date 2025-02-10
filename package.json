@@ -1,8 +1,8 @@
 {
   "name": "ffxiv-phantom-bot",
   "version": "0.0.1",
-  "description": "Bot for Phantom hunter Discord",
-  "main": "index.js",
+  "description": "Bot for FFXIV Phantom hunter Discord",
+  "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
@@ -13,8 +13,9 @@
   "keywords": [
     "bot",
     "ffxiv",
-    "geo",
-    "geolocation",
+    "xiv",
+    "phantom",
+    "hunt",
     "geoguesser",
     "geoguess"
   ],
