@@ -34,15 +34,19 @@ export default {
     expansion,
     difficulty,
     maxDifficulty,
+    maxExpansion,
   }: {
-    expansion?: string | null;
+    expansion?: number | null;
     difficulty?: number | null;
     maxDifficulty?: number | null;
+    maxExpansion?: number | null;
   }) => {
     let stmt = 'SELECT * FROM xivgeo_image WHERE last_used IS NULL';
 
     if (expansion) {
       stmt += ' AND expansion = ' + expansion;
+    } else if (maxExpansion) {
+      stmt += ' AND expansion <= ' + maxExpansion;
     }
 
     if (difficulty) {

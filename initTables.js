@@ -46,7 +46,8 @@ try {
     image_ids VARCHAR(255) NOT NULL,
     difficulty TINYINT(1),
     maxdifficulty TINYINT(1),
-    expansion VARCHAR(10),
+    expansion TINYINT(1),
+    maxexpansion TINYINT(1),
     running TINYINT(1) DEFAULT 0,
     ends_at TIMESTAMP DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -61,7 +62,7 @@ try {
     x FLOAT(3,1) NOT NULL,
     y FLOAT(3,1) NOT NULL,
     discord_id VARCHAR(25) NOT NULL,
-    expansion VARCHAR(10),
+    expansion TINYINT(1),
     difficulty TINYINT(1),
     last_used TIMESTAMP NULL DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

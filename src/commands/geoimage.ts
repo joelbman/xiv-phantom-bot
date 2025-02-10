@@ -21,17 +21,17 @@ export const data = new SlashCommandBuilder()
   .addIntegerOption((option) =>
     option.setName('difficulty').setDescription('Difficulty 1-5').setMaxValue(5).setMinValue(1)
   )
-  .addStringOption((option) =>
+  .addIntegerOption((option) =>
     option
       .setName('expansion')
       .setDescription('Expansion')
       .addChoices(
-        { name: 'ARR', value: 'arr' },
-        { name: 'HW', value: 'hw' },
-        { name: 'SB', value: 'sb' },
-        { name: 'SHB', value: 'shb' },
-        { name: 'EW', value: 'ew' },
-        { name: 'DT', value: 'dt' }
+        { name: 'ARR', value: 1 },
+        { name: 'HW', value: 2 },
+        { name: 'SB', value: 3 },
+        { name: 'SHB', value: 4 },
+        { name: 'EW', value: 5 },
+        { name: 'DT', value: 6 }
       )
   );
 
@@ -49,7 +49,7 @@ export async function execute(interaction: CommandInteraction) {
   try {
     const [insert] = await imageService.addImage({
       url: opts.getAttachment('image').url,
-      expansion: opts.getString('expansion') ?? null,
+      expansion: opts.getInteger('expansion') ?? null,
       difficulty: opts.getInteger('difficulty') ?? null,
       zone: opts.getString('zone'),
       x: opts.getNumber('x'),

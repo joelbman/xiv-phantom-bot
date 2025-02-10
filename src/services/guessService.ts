@@ -26,13 +26,13 @@ interface AddGuessPayload {
 export default {
   addGuess: async ({ discordId, quizId, imgNumber, zone, x, y }: AddGuessPayload) => {
     await db.execute<IGuess[]>(
-      'INSERT INTO xivgeo_guess (discord_id, quiz_id, image_number, zone, x, y) VALUES (?, ?, ?, ?, ?, ?)',
+      'INSERT INTO xivgeo_guess (discord_id, quiz_id, quiz_image_index, zone, x, y) VALUES (?, ?, ?, ?, ?, ?)',
       [discordId, quizId, imgNumber, zone, x, y]
     );
   },
   hasGuessed: async (imgNumber: number, quizId: number, discordId: string) => {
     const [guesses] = await db.execute<IGuess[]>(
-      'SELECT * FROM xivgeo_guess WHERE image_number = ? AND quiz_id = ? AND discord_id = ?',
+      'SELECT * FROM xivgeo_guess WHERE quiz_image_index = ? AND quiz_id = ? AND discord_id = ?',
       [imgNumber, quizId, discordId]
     );
 

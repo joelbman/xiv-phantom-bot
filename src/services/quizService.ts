@@ -8,7 +8,8 @@ export interface IQuiz extends RowDataPacket {
   message_id: string;
   channel_id: string;
   discord_id: string;
-  expansion?: string | null;
+  expansion?: number | null;
+  maxexpansion?: number | null;
   difficulty?: number | null;
   maxdifficulty?: number | null;
   running?: number;
@@ -20,7 +21,8 @@ interface AddQuizPayload {
   message_id: string;
   channel_id: string;
   discord_id: string;
-  expansion?: string | null;
+  expansion?: number | null;
+  maxexpansion?: number | null;
   difficulty?: number | null;
   maxdifficulty?: number | null;
   running?: number;
@@ -34,12 +36,13 @@ export default {
     channel_id,
     image_ids,
     expansion,
+    maxexpansion,
     difficulty,
     maxdifficulty,
   }: AddQuizPayload) => {
     return db.execute<ResultSetHeader>(
-      'INSERT INTO xivgeo_quiz (expansion, difficulty, maxdifficulty, image_ids, ends_at, discord_id, message_id, channel_id, running) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)',
-      [expansion, difficulty, maxdifficulty, image_ids, ends_at, discord_id, message_id, channel_id]
+      'INSERT INTO xivgeo_quiz (expansion, maxexpansion, difficulty, maxdifficulty, image_ids, ends_at, discord_id, message_id, channel_id, running) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)',
+      [expansion, maxexpansion, difficulty, maxdifficulty, image_ids, ends_at, discord_id, message_id, channel_id]
     );
   },
   getExpired: async () => {

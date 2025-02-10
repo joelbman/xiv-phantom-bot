@@ -18,20 +18,40 @@ const difficultyMapping: { [key: number]: string } = {
   5: 'Extreme',
 };
 
+const expansionMapping: { [key: number]: string } = {
+  1: 'A Realm Reborn',
+  2: 'Heavensward',
+  3: 'Stormblood',
+  4: 'Shadowbringers',
+  5: 'Endwalker',
+  6: 'Dawntrail',
+};
+
 export const data = new SlashCommandBuilder()
   .setName('geostart')
   .setDescription('Starts a new quiz')
-  .addStringOption((option) =>
+  .addIntegerOption((option) =>
     option
       .setName('expansion')
-      .setDescription('Expansion')
+      .setDescription('Include only images from selected expansion')
       .addChoices(
-        { name: 'ARR', value: 'arr' },
-        { name: 'HW', value: 'hw' },
-        { name: 'SB', value: 'sb' },
-        { name: 'SHB', value: 'shb' },
-        { name: 'EW', value: 'ew' },
-        { name: 'DT', value: 'dt' }
+        { name: 'ARR', value: 1 },
+        { name: 'HW', value: 2 },
+        { name: 'SB', value: 3 },
+        { name: 'SHB', value: 4 },
+        { name: 'EW', value: 5 },
+        { name: 'DT', value: 6 }
+      )
+  )
+  .addIntegerOption((option) =>
+    option
+      .setName('maxexpansion')
+      .setDescription('Include images from selected and all previous expansions')
+      .addChoices(
+        { name: 'HW', value: 2 },
+        { name: 'SB', value: 3 },
+        { name: 'SHB', value: 4 },
+        { name: 'EW', value: 5 }
       )
   )
   .addIntegerOption((option) =>
@@ -67,9 +87,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   if (!opts.getString('imageids')) {
     const [images] = await imageService.getUnused({
-      expansion: opts.getString('expansion'),
+      expansion: opts.getInteger('expansion'),
       difficulty: opts.getInteger('difficulty'),
       maxDifficulty: opts.getInteger('maxdifficulty'),
+      maxExpansion: opts.getInteger('maxexpansion'),
     });
 
     if (images.length < 5) {
@@ -104,6 +125,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const role = interaction.guild?.roles.cache.find((r) => r.name === 'GeoGuess');
 
     let difficultyText = '';
+    let expansionText = '';
 
     if (opts.getInteger('maxdifficulty')) {
       difficultyText = 'Very easy - ' + difficultyMapping[opts.getInteger('maxdifficulty') as number];
@@ -113,6 +135,14 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       difficultyText = 'Any';
     }
 
+    if (opts.getInteger('maxexpansion')) {
+      expansionText = 'ARR - ' + expansionMapping[opts.getInteger('maxexpansion') as number];
+    } else if (opts.getInteger('expansion')) {
+      expansionText = expansionMapping[opts.getInteger('expansion') as number];
+    } else {
+      expansionText = 'Any';
+    }
+
     const embeds = [
       new EmbedBuilder()
         .setColor(0x0099ff)
@@ -120,7 +150,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         .setDescription(`A new quiz has started! ${role?.id && `<@&${role.id}>`}`)
         .addFields(
           { name: 'Difficulty', value: difficultyText, inline: true },
-          { name: 'Expansion', value: opts.getString('expansion')?.toLocaleUpperCase() || 'Any', inline: true }
+          {
+            name: 'Expansion',
+            value: expansionText,
+            inline: true,
+          }
         )
         .setFooter({ text: 'Quiz ends at ' + endsAt }),
       imgList.map((img, i) =>
@@ -139,7 +173,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       message_id: msg.id,
       channel_id: interaction.channel?.id || '',
       discord_id: interaction.user.id,
-      expansion: opts.getString('expansion') ?? null,
+      expansion: opts.getInteger('expansion') ?? null,
+      maxexpansion: opts.getInteger('expansion') ?? null,
       difficulty: opts.getInteger('difficulty') ?? null,
       maxdifficulty: opts.getInteger('maxdifficulty') ?? null,
     });

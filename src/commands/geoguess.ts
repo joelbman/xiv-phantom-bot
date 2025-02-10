@@ -42,7 +42,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       });
     }
 
-    if (x.toString().length > 5 || y.toString.length > 5 || x.toString().length < 3 || y.toString().length < 3) {
+    console.log(x.toString());
+
+    if (x.toString().length > 4 || y.toString.length > 4) {
       return interaction.reply({
         content: 'Invalid coordinate value',
         flags: MessageFlags.Ephemeral,
