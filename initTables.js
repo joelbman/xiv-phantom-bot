@@ -21,7 +21,7 @@ try {
     name VARCHAR(100) NOT NULL,
     points INT NOT NULL DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  ) CHARSET=utf8mb4_unicode_ci;`
+  ) CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`
   );
 
   await db.execute(
@@ -34,7 +34,7 @@ try {
     y FLOAT(3,1) NOT NULL,
     quiz_image_index TINYINT(1) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  ) CHARSET=utf8mb4_unicode_ci;`
+  ) CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`
   );
 
   await db.execute(
@@ -50,7 +50,7 @@ try {
     running TINYINT(1) DEFAULT 0,
     ends_at TIMESTAMP DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  ) CHARSET=utf8mb4_unicode_ci;`
+  ) CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`
   );
 
   await db.execute(
@@ -63,9 +63,9 @@ try {
     discord_id VARCHAR(25) NOT NULL,
     expansion VARCHAR(10),
     difficulty TINYINT(1),
-    last_used TIMESTAMP DEFAULT NULL,
+    last_used TIMESTAMP NULL DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  ) CHARSET=utf8mb4_unicode_ci;`
+  ) CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`
   );
 
   console.log('tables created');

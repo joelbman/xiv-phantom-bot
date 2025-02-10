@@ -47,7 +47,7 @@ client.on('interactionCreate', async (interaction) => {
     }
     return;
   } else if (interaction.isAutocomplete()) {
-    if (interaction.commandName !== 'guess' && interaction.commandName !== 'addimage') {
+    if (interaction.commandName !== 'geoguess' && interaction.commandName !== 'geoimage') {
       return;
     }
 

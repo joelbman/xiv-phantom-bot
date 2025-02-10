@@ -37,9 +37,9 @@ export default {
     difficulty,
     maxdifficulty,
   }: AddQuizPayload) => {
-    return db.execute(
-      'INSERT INTO xivgeo_quiz (expansion, difficulty, maxdifficulty, image_ids, ends_at, discord_id, message_id, channel_id, running) VALUES (?, ?, ?, ?, ?, ?, ?, 1)',
-      [expansion, difficulty, maxdifficulty, image_ids, ends_at, discord_id, message_id, channel_id, 1]
+    return db.execute<ResultSetHeader>(
+      'INSERT INTO xivgeo_quiz (expansion, difficulty, maxdifficulty, image_ids, ends_at, discord_id, message_id, channel_id, running) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)',
+      [expansion, difficulty, maxdifficulty, image_ids, ends_at, discord_id, message_id, channel_id]
     );
   },
   getExpired: async () => {

@@ -117,7 +117,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       new EmbedBuilder()
         .setColor(0x0099ff)
         .setTitle('XIV Geoguesser')
-        .setDescription(`A new quiz has started! ${role?.id && `<@${role.id}&>`}`)
+        .setDescription(`A new quiz has started! ${role?.id && `<@&${role.id}>`}`)
         .addFields(
           { name: 'Difficulty', value: difficultyText, inline: true },
           { name: 'Expansion', value: opts.getString('expansion')?.toLocaleUpperCase() || 'Any', inline: true }
@@ -127,7 +127,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         new EmbedBuilder()
           .setColor(0x0099ff)
           .setTitle('#' + (i + 1))
-          .setImage(img.path)
+          .setImage(img.url)
       ),
     ].flat();
 
@@ -143,6 +143,12 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       difficulty: opts.getInteger('difficulty') ?? null,
       maxdifficulty: opts.getInteger('maxdifficulty') ?? null,
     });
+
+    if (!insert.insertId) {
+      await msg.delete();
+    }
+
+    // await imageService.markAsUsed(imageIds);
 
     return interaction.reply({
       content: 'Quiz started! Quiz ID: ' + (insert as any).insertId,

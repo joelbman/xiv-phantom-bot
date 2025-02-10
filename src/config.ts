@@ -2,7 +2,8 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const { BOT_TOKEN, BOT_CLIENT_ID, DB_USER, DB_HOSTNAME, DB_PASS, DB_DATABASE, GUILD_ID, CHANNEL_ID } = process.env;
+const { BOT_TOKEN, BOT_CLIENT_ID, DB_USER, DB_HOSTNAME, DB_PASS, DB_DATABASE, GUILD_ID, CHANNEL_ID, ROLE_ID } =
+  process.env;
 
 if (!BOT_TOKEN) {
   throw new Error('Missing environment variables');
@@ -17,4 +18,5 @@ export const config = {
   DB_DATABASE,
   GUILD_ID,
   CHANNEL_ID,
+  ROLE_ID,
 };

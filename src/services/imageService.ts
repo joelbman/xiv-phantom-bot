@@ -25,7 +25,7 @@ interface AddImagePayload {
 export default {
   addImage: async ({ url, expansion, difficulty, zone, x, y, discord_id }: AddImagePayload) => {
     return db.execute(
-      'INSERT INTO xivgeo_image (path, expansion, difficulty, zone, x, y, discord_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO xivgeo_image (url, expansion, difficulty, zone, x, y, discord_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
       [url, expansion, difficulty, zone, x, y, discord_id]
     );
   },
@@ -56,5 +56,11 @@ export default {
 
   getByIds: async (imageIds: string) => {
     return db.execute<IImage[]>('SELECT * FROM xivgeo_image WHERE id IN (' + imageIds + ')');
+  },
+
+  markAsUsed: async (imageIds: string) => {
+    const now = new Date(Date.now());
+    const date = now.toISOString().slice(0, 19).replace('T', ' ');
+    return db.execute('UPDATE xivgeo_image SET last_used = ? WHERE id IN (' + imageIds + ')', [date]);
   },
 };
