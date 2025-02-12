@@ -1,14 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {
-  ChatInputCommandInteraction,
-  EmbedBuilder,
-  MessageFlags,
-  PermissionsBitField,
-  SlashCommandBuilder,
-  TextChannel,
-} from 'discord.js';
+import { ChatInputCommandInteraction, EmbedBuilder, MessageFlags, SlashCommandBuilder, TextChannel } from 'discord.js';
 import imageService from '../services/imageService';
 import quizService from '../services/quizService';
+import { permissionCheck } from '../util/interactionHelpers';
+import { dates } from '../util/date';
 
 const difficultyMapping: { [key: number]: string } = {
   1: 'Very easy',
@@ -62,14 +57,16 @@ export const data = new SlashCommandBuilder()
   )
   .addStringOption((option) =>
     option.setName('imageids').setDescription('Type a comma separated list of image IDs e.g. 4,5,12,13,15')
-  );
+  )
+  .addIntegerOption((option) =>
+    option.setName('duration').setDescription('Duration in days 1-7').setMinValue(1).setMaxValue(7)
+  )
+  .addBooleanOption((option) => option.setName('allowused').setDescription('Allow already used images'));
 
 export async function execute(interaction: ChatInputCommandInteraction) {
-  if (!(interaction.member?.permissions as PermissionsBitField).has([PermissionsBitField.Flags.KickMembers])) {
-    return await interaction.reply({
-      content: 'Permission denied',
-      flags: MessageFlags.Ephemeral,
-    });
+  const perms = await permissionCheck(interaction);
+  if (perms !== true) {
+    return;
   }
 
   const [runningQuizes] = await quizService.getRunning();
@@ -86,16 +83,17 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   let imgList;
 
   if (!opts.getString('imageids')) {
-    const [images] = await imageService.getUnused({
+    const [images] = await imageService.getImages({
       expansion: opts.getInteger('expansion'),
       difficulty: opts.getInteger('difficulty'),
       maxDifficulty: opts.getInteger('maxdifficulty'),
       maxExpansion: opts.getInteger('maxexpansion'),
+      allowUsed: opts.getBoolean('allowused'),
     });
 
     if (images.length < 5) {
       return interaction.reply({
-        content: 'There are less than 5 unused images so a new quiz cannot be created.',
+        content: 'Found less than 5 images with selected options so a new quiz cannot be created.',
         flags: MessageFlags.Ephemeral,
       });
     }
@@ -110,65 +108,66 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     imgList = shuffled;
   } else {
     imageIds = opts.getString('imageids') || '';
+    console.log(imageIds);
+    if (imageIds && imageIds.split(',').length !== 5) {
+      return interaction.reply({
+        content: 'Invalid ID list input',
+        flags: MessageFlags.Ephemeral,
+      });
+    }
 
     const [images] = await imageService.getByIds(imageIds);
+    console.log(images);
+
+    if (images.length < 5) {
+      return interaction.reply({
+        content: 'Found less than 5 images with selected options so a new quiz cannot be created.',
+        flags: MessageFlags.Ephemeral,
+      });
+    }
 
     imgList = images;
   }
 
+  const endsAt = opts.getInteger('duration') ? dates.days(opts.getInteger('duration') || 7) : dates.oneWeek();
+  const channel = interaction.channel as TextChannel;
+  const role = interaction.guild?.roles.cache.find((r) => r.name === 'GeoGuess');
+  let difficultyText = '',
+    expansionText = '';
+
+  if (opts.getInteger('maxdifficulty')) {
+    difficultyText = 'Very easy - ' + difficultyMapping[opts.getInteger('maxdifficulty') as number];
+  } else if (opts.getInteger('difficulty')) {
+    difficultyText = difficultyMapping[opts.getInteger('difficulty') as number];
+  } else {
+    difficultyText = 'Any';
+  }
+
+  if (opts.getInteger('maxexpansion')) {
+    expansionText = 'ARR - ' + expansionMapping[opts.getInteger('maxexpansion') as number];
+  } else if (opts.getInteger('expansion')) {
+    expansionText = expansionMapping[opts.getInteger('expansion') as number];
+  } else {
+    expansionText = 'Any';
+  }
+
+  const embeds = imgList.map((img, i) =>
+    new EmbedBuilder()
+      .setColor(0x0099ff)
+      .setTitle('#' + (i + 1))
+      .setImage(img.url)
+  );
+
+  const content = `A new quiz has started! ${
+    role?.id ? `<@&${role.id}>` : ''
+  }\n\n**Difficulty:** ${difficultyText}\n**Expansion(s):** ${expansionText}\n## How to participate:\nFly around in zones looking for the spots in the images. Once you think you've found the spot, submit a guess by typing \`/geoguess\`\n\nExample guess:\n\`\`\`/geoguess number:3 zone:Western Thanalan x:5.2 y:4.3\`\`\`\n- The coordinates must be +-2.0 of the exact coordinates given by the image uploader\n- Zone name must match exactly how it is written in game. The bot will help you by autocompleting once you start typing the zone name\n- You can only guess once per image, each correct answer will give you a point\n### The quiz will end at:\n${endsAt}\n\nGood luck!\n\n`;
+
   try {
-    const oneWeek = new Date(Date.now() + 6.048e8);
-    const endsAt = oneWeek.toISOString().slice(0, 19).replace('T', ' ');
-
-    const channel = interaction.channel as TextChannel;
-
-    const role = interaction.guild?.roles.cache.find((r) => r.name === 'GeoGuess');
-
-    let difficultyText = '';
-    let expansionText = '';
-
-    if (opts.getInteger('maxdifficulty')) {
-      difficultyText = 'Very easy - ' + difficultyMapping[opts.getInteger('maxdifficulty') as number];
-    } else if (opts.getInteger('difficulty')) {
-      difficultyText = difficultyMapping[opts.getInteger('difficulty') as number];
-    } else {
-      difficultyText = 'Any';
-    }
-
-    if (opts.getInteger('maxexpansion')) {
-      expansionText = 'ARR - ' + expansionMapping[opts.getInteger('maxexpansion') as number];
-    } else if (opts.getInteger('expansion')) {
-      expansionText = expansionMapping[opts.getInteger('expansion') as number];
-    } else {
-      expansionText = 'Any';
-    }
-
-    const embeds = [
-      new EmbedBuilder()
-        .setColor(0x0099ff)
-        .setTitle('XIV Geoguesser')
-        .setDescription(`A new quiz has started! ${role?.id && `<@&${role.id}>`}`)
-        .addFields(
-          { name: 'Difficulty', value: difficultyText, inline: true },
-          {
-            name: 'Expansion',
-            value: expansionText,
-            inline: true,
-          }
-        )
-        .setFooter({ text: 'Quiz ends at ' + endsAt }),
-      imgList.map((img, i) =>
-        new EmbedBuilder()
-          .setColor(0x0099ff)
-          .setTitle('#' + (i + 1))
-          .setImage(img.url)
-      ),
-    ].flat();
-
-    const msg = await channel.send({ embeds: embeds });
+    const msg = await channel.send({ embeds: embeds, content: content });
 
     const [insert] = await quizService.addQuiz({
       image_ids: imageIds,
+      created_at: dates.now(),
       ends_at: endsAt,
       message_id: msg.id,
       channel_id: interaction.channel?.id || '',
@@ -183,7 +182,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       await msg.delete();
     }
 
-    // await imageService.markAsUsed(imageIds);
+    await imageService.markAsUsed(imageIds);
 
     return interaction.reply({
       content: 'Quiz started! Quiz ID: ' + (insert as any).insertId,

@@ -37,14 +37,19 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
     if (!x || !y || !imgNumber || !zone) {
       return interaction.reply({
-        content: 'Error!',
+        content: 'Error, invalid input!',
         flags: MessageFlags.Ephemeral,
       });
     }
 
-    console.log(x.toString());
+    if (!zones.includes(zone)) {
+      return interaction.reply({
+        content: 'Error, invalid zone name!',
+        flags: MessageFlags.Ephemeral,
+      });
+    }
 
-    if (x.toString().length > 4 || y.toString.length > 4) {
+    if (x.toString().length > 4 || y.toString.length > 4 || x < 0 || y < 0 || x > 40 || y > 40) {
       return interaction.reply({
         content: 'Invalid coordinate value',
         flags: MessageFlags.Ephemeral,
@@ -81,12 +86,12 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       });
     }
 
-    if (img.discord_id === interaction.user.id) {
-      return interaction.reply({
-        content: 'You cannot guess on entries that you have uploaded',
-        flags: MessageFlags.Ephemeral,
-      });
-    }
+    // if (img.discord_id === interaction.user.id) {
+    //   return interaction.reply({
+    //     content: 'You cannot guess on entries that you have uploaded',
+    //     flags: MessageFlags.Ephemeral,
+    //   });
+    // }
 
     await guessService.addGuess({
       discordId: interaction.user.id,

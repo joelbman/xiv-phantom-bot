@@ -1,11 +1,5 @@
-import {
-  ChannelType,
-  ChatInputCommandInteraction,
-  MessageFlags,
-  PermissionsBitField,
-  SlashCommandBuilder,
-  TextChannel,
-} from 'discord.js';
+import { ChannelType, ChatInputCommandInteraction, MessageFlags, SlashCommandBuilder, TextChannel } from 'discord.js';
+import { permissionCheck } from '../util/interactionHelpers';
 
 export const data = new SlashCommandBuilder()
   .setName('sendmsg')
@@ -16,11 +10,9 @@ export const data = new SlashCommandBuilder()
   .addStringOption((option) => option.setName('message').setDescription('Message').setRequired(true));
 
 export async function execute(interaction: ChatInputCommandInteraction) {
-  if (!(interaction.member?.permissions as PermissionsBitField).has([PermissionsBitField.Flags.KickMembers])) {
-    return await interaction.reply({
-      content: 'Permission denied',
-      flags: MessageFlags.Ephemeral,
-    });
+  const perms = await permissionCheck(interaction);
+  if (perms !== true) {
+    return;
   }
 
   try {

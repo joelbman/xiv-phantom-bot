@@ -1,4 +1,4 @@
-import { RowDataPacket } from 'mysql2';
+import { ResultSetHeader, RowDataPacket } from 'mysql2';
 import db from '../db';
 
 export interface IUser extends RowDataPacket {
@@ -11,7 +11,11 @@ export interface IUser extends RowDataPacket {
 
 export default {
   addUser: async (id?: string, name?: string) => {
-    return db.execute('INSERT INTO xivgeo_user (discord_id, name, points) VALUES (?, ?, ?)', [id, name, 1]);
+    return db.execute<ResultSetHeader>('INSERT INTO xivgeo_user (discord_id, name, points) VALUES (?, ?, ?)', [
+      id,
+      name,
+      1,
+    ]);
   },
 
   getUser: async (id?: string) => {
@@ -19,7 +23,10 @@ export default {
   },
 
   updateUser: async (id?: string, name?: string) => {
-    return db.execute('UPDATE xivgeo_user SET points = points + 1, name = name WHERE discord_id = ?', [id, name]);
+    return db.execute<ResultSetHeader>('UPDATE xivgeo_user SET points = points + 1, name = name WHERE discord_id = ?', [
+      id,
+      name,
+    ]);
   },
 
   getLeaderboard: async () => {

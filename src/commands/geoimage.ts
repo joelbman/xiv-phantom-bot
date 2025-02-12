@@ -1,13 +1,23 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   AutocompleteInteraction,
-  CommandInteraction,
+  ChatInputCommandInteraction,
   MessageFlags,
-  PermissionsBitField,
   SlashCommandBuilder,
+  TextChannel,
 } from 'discord.js';
-import { zones } from '../util/zones';
+import { zones, zonesByExpansion } from '../util/zones';
 import imageService from '../services/imageService';
+import { config } from '../config';
+import { permissionCheck } from '../util/interactionHelpers';
+
+const expansionMapping: { [key: string]: number } = {
+  arr: 1,
+  hw: 2,
+  sb: 3,
+  shb: 4,
+  ew: 5,
+  dt: 6,
+};
 
 export const data = new SlashCommandBuilder()
   .setName('geoimage')
@@ -19,52 +29,75 @@ export const data = new SlashCommandBuilder()
   .addNumberOption((option) => option.setName('x').setDescription('X').setRequired(true))
   .addNumberOption((option) => option.setName('y').setDescription('Y').setRequired(true))
   .addIntegerOption((option) =>
-    option.setName('difficulty').setDescription('Difficulty 1-5').setMaxValue(5).setMinValue(1)
-  )
-  .addIntegerOption((option) =>
-    option
-      .setName('expansion')
-      .setDescription('Expansion')
-      .addChoices(
-        { name: 'ARR', value: 1 },
-        { name: 'HW', value: 2 },
-        { name: 'SB', value: 3 },
-        { name: 'SHB', value: 4 },
-        { name: 'EW', value: 5 },
-        { name: 'DT', value: 6 }
-      )
+    option.setName('difficulty').setDescription('Difficulty 1-5').setMaxValue(5).setMinValue(1).setRequired(true)
   );
 
-export async function execute(interaction: CommandInteraction) {
-  if (!(interaction.member?.permissions as PermissionsBitField).has([PermissionsBitField.Flags.KickMembers])) {
-    await interaction.reply({
-      content: 'Permission denied',
-      flags: MessageFlags.Ephemeral,
-    });
+export async function execute(interaction: ChatInputCommandInteraction) {
+  const perms = await permissionCheck(interaction);
+  if (perms !== true) {
     return;
   }
 
-  const opts = interaction.options as any;
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+  if (!config.IMAGE_CHANNEL_ID) {
+    return await interaction.editReply({ content: 'Missing image channel ID' });
+  }
+
+  const channel = interaction.guild?.channels.cache.get(config.IMAGE_CHANNEL_ID) as TextChannel;
+  if (!channel) {
+    return await interaction.editReply({ content: 'Error retrieving image channel' });
+  }
+
+  const opts = interaction.options;
+
+  let expansion = '';
+
+  Object.entries(zonesByExpansion).forEach(([key, value]) => {
+    const found = value.find((z) => z === opts.getString('zone'));
+    if (found) {
+      expansion = key;
+    }
+  });
 
   try {
     const [insert] = await imageService.addImage({
-      url: opts.getAttachment('image').url,
-      expansion: opts.getInteger('expansion') ?? null,
+      url: opts.getAttachment('image')?.url || '',
+      expansion: expansion ? expansionMapping[expansion] : null,
       difficulty: opts.getInteger('difficulty') ?? null,
-      zone: opts.getString('zone'),
-      x: opts.getNumber('x'),
-      y: opts.getNumber('y'),
+      zone: opts.getString('zone') || '',
+      x: opts.getNumber('x') || 1,
+      y: opts.getNumber('y') || 1,
       discord_id: interaction.user.id,
     });
-    await interaction.reply({
-      content: 'Donezo :ok_hand: - Image ID: ' + (insert as any).insertId,
-      flags: MessageFlags.Ephemeral,
+
+    if (!insert.insertId) {
+      return await interaction.editReply({ content: 'Image insert failed' });
+    }
+
+    const msg = await channel.send({
+      content: `**Image #${insert.insertId}**\n||Zone: ${opts.getString('zone')}\nX: ${opts.getNumber(
+        'x'
+      )} / Y: ${opts.getNumber('y')}\nDifficulty: ${opts.getInteger('difficulty')}\n||`,
+      files: [{ attachment: opts.getAttachment('image')?.url || '', name: `SPOILER_img_${insert.insertId}.png` }],
+    });
+
+    if (msg?.id && msg.attachments.first()?.url) {
+      await imageService.updateImage(insert.insertId, msg.id, msg.attachments.first()?.url);
+    } else {
+      await imageService.deleteImage(insert.insertId);
+      return await interaction.editReply({
+        content: 'Failed to retrieve image log message/attachment',
+      });
+    }
+
+    return await interaction.editReply({
+      content: 'Donezo :ok_hand: - Image ID: ' + insert.insertId,
     });
   } catch (e) {
     console.log(e);
-    await interaction.reply({
+    return await interaction.editReply({
       content: 'Error!',
-      flags: MessageFlags.Ephemeral,
     });
   }
 }

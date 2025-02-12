@@ -31,7 +31,7 @@ client.once('ready', async () => {
     }
 
     console.log('Checked running polls - ' + expiredQuizes.length + ' matches');
-  }, 24000);
+  }, 180000);
   //3600000
 });
 
