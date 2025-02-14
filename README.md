@@ -4,4 +4,9 @@ WIP readme
 
 ## Commands
 
-/startquiz
+/geostart
+/geostop
+/geoguess
+/geoimage
+/geoimagedelete
+/sendmsg

@@ -7,7 +7,6 @@
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
     "build": "tsup src/index.ts --minify",
-    "init-tables": "node initTables.js",
     "commands": "tsx src/refreshCommands.ts"
   },
   "keywords": [
