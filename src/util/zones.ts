@@ -14,6 +14,7 @@ const zonesByExpansion = {
     'Central Shroud',
     'East Shroud',
     'North Shroud',
+    'South Shroud',
     'Coerthas Central Highlands',
     'Mor Dhona',
     'Limsa Lominsa Upper Decks',
@@ -25,6 +26,7 @@ const zonesByExpansion = {
     'The Mists',
     'The Lavender Beds',
     'The Goblet',
+    "Wolves' Den Pier",
   ],
   hw: [
     'Coerthas Western Highlands',
@@ -48,6 +50,7 @@ const zonesByExpansion = {
     "Rhalgr's Reach",
     'Kugane',
     'The Doman Enclave',
+    'Shirogane',
   ],
   shb: [
     'Lakeland',
@@ -58,6 +61,7 @@ const zonesByExpansion = {
     'The Tempest',
     'Eulmore',
     'The Crystarium',
+    'Lyhe Mheg',
   ],
   ew: [
     'Labyrinthos',

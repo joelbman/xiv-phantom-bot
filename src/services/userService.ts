@@ -23,9 +23,9 @@ export default {
   },
 
   updateUser: async (id?: string, name?: string) => {
-    return db.execute<ResultSetHeader>('UPDATE xivgeo_user SET points = points + 1, name = name WHERE discord_id = ?', [
-      id,
+    return db.execute<ResultSetHeader>('UPDATE xivgeo_user SET points = points + 1, name = ? WHERE discord_id = ?', [
       name,
+      id,
     ]);
   },
 

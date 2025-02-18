@@ -1,9 +1,16 @@
-import { AutocompleteInteraction, ChatInputCommandInteraction, MessageFlags, SlashCommandBuilder } from 'discord.js';
+import {
+  AutocompleteInteraction,
+  ChatInputCommandInteraction,
+  GuildMember,
+  MessageFlags,
+  SlashCommandBuilder,
+} from 'discord.js';
 import { zones } from '../util/zones';
 import userService from '../services/userService';
 import imageService from '../services/imageService';
 import quizService from '../services/quizService';
 import guessService from '../services/guessService';
+import { config } from '../config';
 
 export const data = new SlashCommandBuilder()
   .setName('geoguess')
@@ -49,7 +56,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       });
     }
 
-    if (x.toString().length > 4 || y.toString.length > 4 || x < 0 || y < 0 || x > 40 || y > 40) {
+    if (x.toString().length > 4 || y.toString().length > 4 || x < 0 || y < 0 || x > 40 || y > 40) {
       return interaction.reply({
         content: 'Invalid coordinate value',
         flags: MessageFlags.Ephemeral,
@@ -86,12 +93,12 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       });
     }
 
-    // if (img.discord_id === interaction.user.id) {
-    //   return interaction.reply({
-    //     content: 'You cannot guess on entries that you have uploaded',
-    //     flags: MessageFlags.Ephemeral,
-    //   });
-    // }
+    if (config.GUILD_ID !== '913514320430780436' && img.discord_id === interaction.user.id) {
+      return interaction.reply({
+        content: 'You cannot guess on entries that you have uploaded',
+        flags: MessageFlags.Ephemeral,
+      });
+    }
 
     await guessService.addGuess({
       discordId: interaction.user.id,
@@ -120,13 +127,22 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
       const [users] = await userService.getUser(interaction.member?.user.id);
 
+      const member = interaction.member as GuildMember;
+
+      if (!member) {
+        return interaction.reply({
+          content: `Error retrieving member info`,
+          flags: MessageFlags.Ephemeral,
+        });
+      }
+
       // New user
       if (!users[0]) {
-        await userService.addUser(interaction.member?.user.id, interaction.member?.user.username);
+        await userService.addUser(member.user.id, member.displayName);
       }
       // Update points on existing user
       else {
-        await userService.updateUser(interaction.member?.user.id, interaction.member?.user.username);
+        await userService.updateUser(member.user.id, member.displayName);
       }
 
       return interaction.reply({

@@ -15,8 +15,9 @@ client.once('ready', async () => {
   console.log('Bot running');
 
   try {
-    const tables = await db.execute('SHOW TABLES LIKE `xivgeo`');
-    if (!tables && !tables[0]) {
+    const tables = await db.execute<any>("SHOW TABLES LIKE '%xivgeo%'");
+
+    if (!tables || !tables[0] || tables[0].length < 4) {
       await initTables();
     }
   } catch (e) {

@@ -160,7 +160,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const content = `A new quiz has started! ${
     role?.id ? `<@&${role.id}>` : ''
-  }\n\n**Difficulty:** ${difficultyText}\n**Expansion(s):** ${expansionText}\n## How to participate:\nFly around in zones looking for the spots in the images. Once you think you've found the spot, submit a guess by typing \`/geoguess\`\n\nExample guess:\n\`\`\`/geoguess number:3 zone:Western Thanalan x:5.2 y:4.3\`\`\`\n- The coordinates must be +-2.0 of the exact coordinates given by the image uploader\n- Zone name must match exactly how it is written in game. The bot will help you by autocompleting once you start typing the zone name\n- You can only guess once per image, each correct answer will give you a point\n### The quiz will end at:\n${endsAt}\n\nGood luck!\n\n`;
+  }\n\n**Difficulty:** ${difficultyText}\n**Expansion(s):** ${expansionText}\n## How to participate:\nFly around in zones looking for the spots in the images. Once you think you've found the spot, submit a guess by typing \`/geoguess\`\n\nExample guess:\n\`\`\`/geoguess number:3 zone:Western Thanalan x:5.2 y:4.3\`\`\`\n- The coordinates do not need to be exact but they need to be pretty close\n- Zone name must match exactly how it is written in game. The bot will help you by autocompleting once you start typing the zone name\n- You can only guess once per image, each correct answer will give you a point\n### The quiz will end at:\n${endsAt}\n\nGood luck!\n\n`;
 
   try {
     const msg = await channel.send({ embeds: embeds, content: content });

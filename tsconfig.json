@@ -14,5 +14,5 @@
     "strictNullChecks": true,
     "skipLibCheck": true,
   },
-  "exclude": ["*.mjs", "initTables.js", "deploycommands.js", "dist"]
+  "exclude": ["*.mjs", "deploycommands.js", "dist"]
 }
