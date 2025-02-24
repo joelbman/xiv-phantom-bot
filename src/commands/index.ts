@@ -6,6 +6,7 @@ import * as geoguess from './geoguess';
 import * as georole from './georole';
 import * as geoleaderboard from './geoleaderboard';
 import * as sendmsg from './sendMsg';
+import * as geostatus from './geostatus';
 
 export const commands = {
   geoimage,
@@ -14,6 +15,7 @@ export const commands = {
   geostop,
   geoguess,
   geoleaderboard,
+  geostatus,
   georole,
   sendmsg,
 };

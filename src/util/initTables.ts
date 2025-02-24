@@ -29,6 +29,7 @@ export const initTables = async () => {
       x FLOAT(3,1) NOT NULL,
       y FLOAT(3,1) NOT NULL,
       quiz_image_index TINYINT(1) NOT NULL,
+      correct TINYINT(1),
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`
     );
@@ -40,11 +41,12 @@ export const initTables = async () => {
       message_id VARCHAR(25) NOT NULL,
       channel_id VARCHAR(25) NOT NULL,
       image_ids VARCHAR(255) NOT NULL,
-      difficulty TINYINT(1),
+      mindifficulty TINYINT(1),
       maxdifficulty TINYINT(1),
       expansion TINYINT(1),
       maxexpansion TINYINT(1),
       running TINYINT(1) DEFAULT 0,
+      has_been_completed TINYINT(1) DEFAULT 0,
       ends_at TIMESTAMP DEFAULT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`
@@ -58,7 +60,6 @@ export const initTables = async () => {
       x FLOAT(3,1) NOT NULL,
       y FLOAT(3,1) NOT NULL,
       discord_id VARCHAR(25) NOT NULL,
-      message_id VARCHAR(25) NOT NULL,
       expansion TINYINT(1),
       difficulty TINYINT(1),
       last_used TIMESTAMP NULL DEFAULT NULL,

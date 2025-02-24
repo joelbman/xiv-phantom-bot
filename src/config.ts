@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const { BOT_TOKEN, BOT_CLIENT_ID, DB_USER, DB_HOSTNAME, DB_PASS, DB_DATABASE, GUILD_ID, IMAGE_CHANNEL_ID } =
+const { BOT_TOKEN, BOT_CLIENT_ID, DB_USER, DB_HOSTNAME, DB_PASS, DB_DATABASE, GUILD_ID, IMAGE_CHANNEL_ID, CHANNEL_ID } =
   process.env;
 
 if (!BOT_TOKEN) {
@@ -18,4 +18,5 @@ export const config = {
   DB_DATABASE,
   GUILD_ID,
   IMAGE_CHANNEL_ID,
+  CHANNEL_ID,
 };

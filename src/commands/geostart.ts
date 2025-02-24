@@ -50,10 +50,10 @@ export const data = new SlashCommandBuilder()
       )
   )
   .addIntegerOption((option) =>
-    option.setName('difficulty').setDescription('Difficulty 1-5').setMinValue(1).setMaxValue(5)
+    option.setName('mindifficulty').setDescription('Min difficulty 1-5').setMinValue(1).setMaxValue(5)
   )
   .addIntegerOption((option) =>
-    option.setName('maxdifficulty').setDescription('Max difficulty 2-4').setMinValue(2).setMaxValue(4)
+    option.setName('maxdifficulty').setDescription('Max difficulty 1-5').setMinValue(1).setMaxValue(5)
   )
   .addStringOption((option) =>
     option.setName('imageids').setDescription('Type a comma separated list of image IDs e.g. 4,5,12,13,15')
@@ -85,7 +85,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   if (!opts.getString('imageids')) {
     const [images] = await imageService.getImages({
       expansion: opts.getInteger('expansion'),
-      difficulty: opts.getInteger('difficulty'),
+      minDifficulty: opts.getInteger('mindifficulty'),
       maxDifficulty: opts.getInteger('maxdifficulty'),
       maxExpansion: opts.getInteger('maxexpansion'),
       allowUsed: opts.getBoolean('allowused'),
@@ -108,7 +108,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     imgList = shuffled;
   } else {
     imageIds = opts.getString('imageids') || '';
-    console.log(imageIds);
     if (imageIds && imageIds.split(',').length !== 5) {
       return interaction.reply({
         content: 'Invalid ID list input',
@@ -117,7 +116,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     }
 
     const [images] = await imageService.getByIds(imageIds);
-    console.log(images);
 
     if (images.length < 5) {
       return interaction.reply({
@@ -135,10 +133,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   let difficultyText = '',
     expansionText = '';
 
-  if (opts.getInteger('maxdifficulty')) {
-    difficultyText = 'Very easy - ' + difficultyMapping[opts.getInteger('maxdifficulty') as number];
-  } else if (opts.getInteger('difficulty')) {
-    difficultyText = difficultyMapping[opts.getInteger('difficulty') as number];
+  if (opts.getInteger('maxdifficulty') || opts.getInteger('mindifficulty')) {
+    difficultyText =
+      (opts.getInteger('mindifficulty') ? difficultyMapping[opts.getInteger('mindifficulty') as number] : 'Very easy') +
+        ' - ' +
+        difficultyMapping[opts.getInteger('maxdifficulty') as number] || 'Extreme';
   } else {
     difficultyText = 'Any';
   }
@@ -160,7 +159,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const content = `A new quiz has started! ${
     role?.id ? `<@&${role.id}>` : ''
-  }\n\n**Difficulty:** ${difficultyText}\n**Expansion(s):** ${expansionText}\n## How to participate:\nFly around in zones looking for the spots in the images. Once you think you've found the spot, submit a guess by typing \`/geoguess\`\n\nExample guess:\n\`\`\`/geoguess number:3 zone:Western Thanalan x:5.2 y:4.3\`\`\`\n- The coordinates do not need to be exact but they need to be pretty close\n- Zone name must match exactly how it is written in game. The bot will help you by autocompleting once you start typing the zone name\n- You can only guess once per image, each correct answer will give you a point\n### The quiz will end at:\n${endsAt}\n\nGood luck!\n\n`;
+  }\n\n**Difficulty:** ${difficultyText}\n**Expansion(s):** ${expansionText}\n## How to participate:\nFly around in zones looking for the spots in the images. Once you think you've found the spot, submit a guess by typing \`/geoguess\`\n\nExample guess:\n\`\`\`/geoguess number:3 zone:Western Thanalan x:5.2 y:4.3\`\`\`\n- The coordinates do not need to be exact but they need to be pretty close\n- The locations can be regular zones, including main cities and housing districts. Instances/duties are not included!\n- Zone name must match exactly how it is written in game. The bot will help you by autocompleting once you start typing the zone name\n- You can only guess once per image, each correct answer will give you a point\n### The quiz will end at:\n${endsAt}\n\nGood luck!\n\n*Get pinged when a new quiz starts by typing /georole*\n\n`;
 
   try {
     const msg = await channel.send({ embeds: embeds, content: content });
@@ -173,8 +172,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       channel_id: interaction.channel?.id || '',
       discord_id: interaction.user.id,
       expansion: opts.getInteger('expansion') ?? null,
-      maxexpansion: opts.getInteger('expansion') ?? null,
-      difficulty: opts.getInteger('difficulty') ?? null,
+      maxexpansion: opts.getInteger('maxexpansion') ?? null,
+      mindifficulty: opts.getInteger('mindifficulty') ?? null,
       maxdifficulty: opts.getInteger('maxdifficulty') ?? null,
     });
 

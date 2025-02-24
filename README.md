@@ -1,6 +1,13 @@
 # FFXIV Phantom Hunt Discord Bot
 
-WIP readme
+A Discord bot used in the Final Fantasy XIV Phantom hunt community Discord.
+
+## Tech stack
+
+- Node.js
+- TypeScript
+- Discord.js
+- MySQL
 
 ## Commands
 

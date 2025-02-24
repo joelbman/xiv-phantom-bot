@@ -4,8 +4,7 @@ import { config } from './config';
 import { commands } from './commands';
 import { deployCommands } from './util/deploy-commands';
 import quizService from './services/quizService';
-import db from './db';
-import { initTables } from './util/initTables';
+import guessService from './services/guessService';
 
 const client = new Client({
   intents: ['Guilds', 'GuildMessages'],
@@ -14,15 +13,7 @@ const client = new Client({
 client.once('ready', async () => {
   console.log('Bot running');
 
-  try {
-    const tables = await db.execute<any>("SHOW TABLES LIKE '%xivgeo%'");
-
-    if (!tables || !tables[0] || tables[0].length < 4) {
-      await initTables();
-    }
-  } catch (e) {
-    console.error(e);
-  }
+  await guessService.markCorrect();
 
   setInterval(async () => {
     const [expiredQuizes] = await quizService.getExpired();
@@ -43,7 +34,7 @@ client.once('ready', async () => {
     }
 
     console.log('Checked running polls - ' + expiredQuizes.length + ' matches');
-  }, 280000);
+  }, 2600000);
   //3600000
 });
 

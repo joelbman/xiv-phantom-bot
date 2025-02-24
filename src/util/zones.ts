@@ -46,7 +46,6 @@ const zonesByExpansion = {
     'Yanxia',
     'The Azim Steppe',
     'The Lochs',
-    'Lochs',
     "Rhalgr's Reach",
     'Kugane',
     'The Doman Enclave',
@@ -61,7 +60,6 @@ const zonesByExpansion = {
     'The Tempest',
     'Eulmore',
     'The Crystarium',
-    'Lyhe Mheg',
   ],
   ew: [
     'Labyrinthos',

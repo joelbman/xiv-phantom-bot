@@ -51,13 +51,13 @@ export default {
 
   getImages: async ({
     expansion,
-    difficulty,
+    minDifficulty,
     maxDifficulty,
     maxExpansion,
     allowUsed,
   }: {
     expansion?: number | null;
-    difficulty?: number | null;
+    minDifficulty?: number | null;
     maxDifficulty?: number | null;
     maxExpansion?: number | null;
     allowUsed?: boolean | null;
@@ -73,9 +73,10 @@ export default {
       stmt += ' AND expansion <= ' + maxExpansion;
     }
 
-    if (difficulty) {
-      stmt += ' AND difficulty = ' + difficulty;
-    } else if (maxDifficulty) {
+    if (minDifficulty) {
+      stmt += ' AND difficulty >= ' + minDifficulty;
+    }
+    if (maxDifficulty) {
       stmt += ' AND difficulty <= ' + maxDifficulty;
     }
 
@@ -91,6 +92,12 @@ export default {
   },
 
   markAsUsed: async (imageIds: string) => {
-    return db.execute('UPDATE xivgeo_image SET last_used = ? WHERE id IN (' + imageIds + ')', [dates.now()]);
+    return db.execute<ResultSetHeader>('UPDATE xivgeo_image SET last_used = ? WHERE id IN (' + imageIds + ')', [
+      dates.now(),
+    ]);
+  },
+
+  getAll: async () => {
+    return db.execute<IImage[]>('SELECT * FROM xivgeo_image');
   },
 };

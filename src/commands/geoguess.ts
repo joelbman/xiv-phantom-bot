@@ -4,6 +4,7 @@ import {
   GuildMember,
   MessageFlags,
   SlashCommandBuilder,
+  TextChannel,
 } from 'discord.js';
 import { zones } from '../util/zones';
 import userService from '../services/userService';
@@ -100,20 +101,12 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       });
     }
 
-    await guessService.addGuess({
-      discordId: interaction.user.id,
-      quizId: quiz.id,
-      imgNumber,
-      image_id: img.id,
-      zone,
-      x,
-      y,
-    });
-
     // Correct answer
     if (
-      (img.x <= x + 2 || img.x >= x - 2) &&
-      (img.y >= y + 2 || img.y >= y - 2) &&
+      x >= img.x - 2 &&
+      x <= img.x + 2 &&
+      y >= img.y - 2 &&
+      y <= img.y + 2 &&
       img.zone.toLocaleLowerCase() === zone.toLocaleLowerCase()
     ) {
       const userId = interaction.member?.user.id;
@@ -145,11 +138,49 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         await userService.updateUser(member.user.id, member.displayName);
       }
 
+      await guessService.addGuess({
+        discordId: interaction.user.id,
+        quizId: quiz.id,
+        imgNumber,
+        image_id: img.id,
+        correct: 1,
+        zone,
+        x,
+        y,
+      });
+
+      if (!quiz.has_been_completed) {
+        const [corrects] = await quizService.getCorrects(quiz.id);
+
+        if (corrects && corrects[0]) {
+          const ch = (await interaction.guild?.channels.fetch(config.CHANNEL_ID || '')) as TextChannel;
+
+          if (!ch) {
+            return;
+          }
+
+          const member = interaction.member as GuildMember;
+          await ch.send(member.displayName + ' was the first one to guess all five correct! :tada:');
+          await quizService.markCompleted(quiz.id);
+        }
+      }
+
       return interaction.reply({
         content: `Correct answer! :tada:`,
         flags: MessageFlags.Ephemeral,
       });
     }
+
+    await guessService.addGuess({
+      discordId: interaction.user.id,
+      quizId: quiz.id,
+      imgNumber,
+      image_id: img.id,
+      correct: 0,
+      zone,
+      x,
+      y,
+    });
 
     return interaction.reply({
       content: `Wrong answer :smiling_face_with_tear:`,
