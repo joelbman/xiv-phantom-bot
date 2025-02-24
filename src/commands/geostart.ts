@@ -82,6 +82,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   let imageIds = '';
   let imgList;
 
+  // Without IDs
   if (!opts.getString('imageids')) {
     const [images] = await imageService.getImages({
       expansion: opts.getInteger('expansion'),
@@ -106,7 +107,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
     imageIds = shuffled.map((img) => img.id).join();
     imgList = shuffled;
-  } else {
+  }
+  // With image IDs
+  else {
     imageIds = opts.getString('imageids') || '';
     if (imageIds && imageIds.split(',').length !== 5) {
       return interaction.reply({
@@ -124,7 +127,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       });
     }
 
-    imgList = images;
+    const idArray = imageIds.split(',');
+    imgList = images.sort((a, b) => idArray.indexOf(a.id.toString()) - idArray.indexOf(b.id.toString()));
   }
 
   const endsAt = opts.getInteger('duration') ? dates.days(opts.getInteger('duration') || 7) : dates.oneWeek();
